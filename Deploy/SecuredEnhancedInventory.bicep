@@ -16,10 +16,12 @@ param FunctionAppServicePlanSKU string = 'Y1'
 @description('Provide a name for the Key Vault. Name must be globally unique in Azure and between 3-24 characters, containing only 0-9, a-z, A-Z, and - characters.')
 param KeyVaultName string
 
+//@description('Location for all resources.')
+//param location string = resourceGroup().location
+
 @description('Provide the name of the existing Log Analytics workspace that has your Intune Diagnostics/Inventory logs.')
 param LogAnalyticsWorkspaceName string
 
-//param firstResourceGroupLocationg string = resourceGroup().location
 @description('Provide the name of the resource group for your excisting Intune Log Analytics Workspace')
 param LogAnalyticsResourceGroup string
 
@@ -36,6 +38,8 @@ var FunctionAppNameNoDashUnderScore = replace(FunctionAppNameNoDash, '_', '')
 var StorageAccountName = toLower('${take(FunctionAppNameNoDashUnderScore, 17)}${take(UniqueString, 5)}sa')
 var FunctionAppServicePlanName = '${FunctionAppName}-fa-plan'
 var FunctionAppInsightsName = '${FunctionAppName}-fa-ai'
+
+ 
 
 // Reference excisting Log Analytics Workspace
 resource LogAnalyticsWorkspace 'Microsoft.OperationalInsights/workspaces@2020-10-01' existing = {
@@ -70,6 +74,7 @@ resource appserviceplan 'Microsoft.Web/serverfarms@2021-01-15' = {
   name: FunctionAppServicePlanName
   location: resourceGroup().location
   kind: 'Windows'
+  properties: {}
   sku: {
     name: FunctionAppServicePlanSKU
   }
@@ -77,14 +82,15 @@ resource appserviceplan 'Microsoft.Web/serverfarms@2021-01-15' = {
 }
 
 // Create application insights for Function App
-resource FunctionAppInsightsComponents 'Microsoft.Insights/components@2020-02-02-preview' = {
+resource FunctionAppInsightsComponents 'Microsoft.Insights/components@2020-02-02' = {
   name: FunctionAppInsightsName
   location: resourceGroup().location
   kind: 'web'
   properties: {
     Application_Type: 'web'
   }
-  tags: union(Tags, {
+  tags: union(Tags, 
+    {
     'hidden-link:${resourceId('Microsoft.Web/sites', FunctionAppInsightsName)}': 'Resource'
   })
 }
@@ -130,11 +136,11 @@ resource FunctionApp 'Microsoft.Web/sites@2020-12-01' = {
         }
         {
           name: 'FUNCTIONS_EXTENSION_VERSION'
-          value: '~3'
+          value: '~4'
         }
         {
           name: 'FUNCTIONS_WORKER_PROCESS_COUNT'
-          value: '3'
+          value: '4'
         }
         {
           name: 'PSWorkerInProcConcurrencyUpperBound'
@@ -142,11 +148,11 @@ resource FunctionApp 'Microsoft.Web/sites@2020-12-01' = {
         }
         {
           name: 'APPINSIGHTS_INSTRUMENTATIONKEY'
-          value: reference(FunctionAppInsightsComponents.id, '2020-02-02-preview').InstrumentationKey
+          value: reference(FunctionAppInsightsComponents.id, '2020-02-02').InstrumentationKey
         }
         {
           name: 'APPLICATIONINSIGHTS_CONNECTION_STRING'
-          value: reference(FunctionAppInsightsComponents.id, '2020-02-02-preview').ConnectionString
+          value: reference(FunctionAppInsightsComponents.id, '2020-02-02').ConnectionString
         }
         {
           name: 'FUNCTIONS_WORKER_RUNTIME'
@@ -203,7 +209,7 @@ resource FunctionAppZipDeploy 'Microsoft.Web/sites/extensions@2015-08-01' = {
   parent: FunctionApp
   name: 'ZipDeploy'
   properties: {
-      packageUri: 'https://github.com/MSEndpointMgr/IntuneEnhancedInventory/releases/download/v1.1.0/LogCollectorAPI.zip'
+      packageUri: 'https://github.com/MSEndpointMgr/IntuneEnhancedInventory/releases/download/v1.2/LogCollectorAPI.zip'
   }
 }
 
@@ -215,12 +221,12 @@ resource FunctionAppSettings 'Microsoft.Web/sites/config@2020-06-01' = {
     WEBSITE_CONTENTSHARE: toLower('LogAnalyticsAPI')
     WEBSITE_RUN_FROM_PACKAGE: 1
     AzureWebJobsDisableHomepage: 'true'
-    FUNCTIONS_EXTENSION_VERSION: '~3'
-    FUNCTIONS_WORKER_PROCESS_COUNT: '3'
+    FUNCTIONS_EXTENSION_VERSION: '~4'
+    FUNCTIONS_WORKER_PROCESS_COUNT: '4'
     FUNCTIONS_WORKER_RUNTIME: 'powershell'
     PSWorkerInProcConcurrencyUpperBound: '10'
-    APPINSIGHTS_INSTRUMENTATIONKEY: reference(FunctionAppInsightsComponents.id, '2020-02-02-preview').InstrumentationKey
-    APPLICATIONINSIGHTS_CONNECTION_STRING: reference(FunctionAppInsightsComponents.id, '2020-02-02-preview').ConnectionString
+    APPINSIGHTS_INSTRUMENTATIONKEY: reference(FunctionAppInsightsComponents.id, '2020-02-02').InstrumentationKey
+    APPLICATIONINSIGHTS_CONNECTION_STRING: reference(FunctionAppInsightsComponents.id, '2020-02-02').ConnectionString
     TenantID: subscription().tenantId
     WorkspaceID: '@Microsoft.KeyVault(VaultName=${KeyVaultName};SecretName=WorkSpaceID)'
     SharedKey: '@Microsoft.KeyVault(VaultName=${KeyVaultName};SecretName=SharedKey)'

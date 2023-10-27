@@ -4,8 +4,8 @@
   "metadata": {
     "_generator": {
       "name": "bicep",
-      "version": "0.4.1124.51302",
-      "templateHash": "15788904876108500037"
+      "version": "0.11.1.770",
+      "templateHash": "9761768728791091167"
     }
   },
   "parameters": {
@@ -117,6 +117,7 @@
       "name": "[variables('FunctionAppServicePlanName')]",
       "location": "[resourceGroup().location]",
       "kind": "Windows",
+      "properties": {},
       "sku": {
         "name": "[parameters('FunctionAppServicePlanSKU')]"
       },
@@ -124,7 +125,7 @@
     },
     {
       "type": "Microsoft.Insights/components",
-      "apiVersion": "2020-02-02-preview",
+      "apiVersion": "2020-02-02",
       "name": "[variables('FunctionAppInsightsName')]",
       "location": "[resourceGroup().location]",
       "kind": "web",
@@ -175,11 +176,11 @@
             },
             {
               "name": "FUNCTIONS_EXTENSION_VERSION",
-              "value": "~3"
+              "value": "~4"
             },
             {
               "name": "FUNCTIONS_WORKER_PROCESS_COUNT",
-              "value": "3"
+              "value": "4"
             },
             {
               "name": "PSWorkerInProcConcurrencyUpperBound",
@@ -187,11 +188,11 @@
             },
             {
               "name": "APPINSIGHTS_INSTRUMENTATIONKEY",
-              "value": "[reference(resourceId('Microsoft.Insights/components', variables('FunctionAppInsightsName')), '2020-02-02-preview').InstrumentationKey]"
+              "value": "[reference(resourceId('Microsoft.Insights/components', variables('FunctionAppInsightsName')), '2020-02-02').InstrumentationKey]"
             },
             {
               "name": "APPLICATIONINSIGHTS_CONNECTION_STRING",
-              "value": "[reference(resourceId('Microsoft.Insights/components', variables('FunctionAppInsightsName')), '2020-02-02-preview').ConnectionString]"
+              "value": "[reference(resourceId('Microsoft.Insights/components', variables('FunctionAppInsightsName')), '2020-02-02').ConnectionString]"
             },
             {
               "name": "FUNCTIONS_WORKER_RUNTIME",
@@ -243,7 +244,7 @@
       "apiVersion": "2015-08-01",
       "name": "[format('{0}/{1}', parameters('FunctionAppName'), 'ZipDeploy')]",
       "properties": {
-        "packageUri": "https://github.com/MSEndpointMgr/IntuneEnhancedInventory/releases/download/v1.1.0/LogCollectorAPI.zip"
+        "packageUri": "https://github.com/MSEndpointMgr/IntuneEnhancedInventory/releases/download/v1.2/LogCollectorAPI.zip"
       },
       "dependsOn": [
         "[resourceId('Microsoft.Web/sites', parameters('FunctionAppName'))]"
@@ -259,12 +260,12 @@
         "WEBSITE_CONTENTSHARE": "[toLower('LogAnalyticsAPI')]",
         "WEBSITE_RUN_FROM_PACKAGE": 1,
         "AzureWebJobsDisableHomepage": "true",
-        "FUNCTIONS_EXTENSION_VERSION": "~3",
-        "FUNCTIONS_WORKER_PROCESS_COUNT": "3",
+        "FUNCTIONS_EXTENSION_VERSION": "~4",
+        "FUNCTIONS_WORKER_PROCESS_COUNT": "4",
         "FUNCTIONS_WORKER_RUNTIME": "powershell",
         "PSWorkerInProcConcurrencyUpperBound": "10",
-        "APPINSIGHTS_INSTRUMENTATIONKEY": "[reference(resourceId('Microsoft.Insights/components', variables('FunctionAppInsightsName')), '2020-02-02-preview').InstrumentationKey]",
-        "APPLICATIONINSIGHTS_CONNECTION_STRING": "[reference(resourceId('Microsoft.Insights/components', variables('FunctionAppInsightsName')), '2020-02-02-preview').ConnectionString]",
+        "APPINSIGHTS_INSTRUMENTATIONKEY": "[reference(resourceId('Microsoft.Insights/components', variables('FunctionAppInsightsName')), '2020-02-02').InstrumentationKey]",
+        "APPLICATIONINSIGHTS_CONNECTION_STRING": "[reference(resourceId('Microsoft.Insights/components', variables('FunctionAppInsightsName')), '2020-02-02').ConnectionString]",
         "TenantID": "[subscription().tenantId]",
         "WorkspaceID": "[format('@Microsoft.KeyVault(VaultName={0};SecretName=WorkSpaceID)', parameters('KeyVaultName'))]",
         "SharedKey": "[format('@Microsoft.KeyVault(VaultName={0};SecretName=SharedKey)', parameters('KeyVaultName'))]",
